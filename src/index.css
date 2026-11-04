@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #7a1f3d;
+  --color-accent: #c9a227;
+  --color-soft: #f8e8ec;
+  --color-bg: #fffbf5;
+  --color-text: #2b2b2b;
+  --font-sans: Inter, 'Hind Siliguri', sans-serif;
+  --font-display: 'Playfair Display', serif;
+  --font-bangla: 'Hind Siliguri', sans-serif;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
