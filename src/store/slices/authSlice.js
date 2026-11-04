@@ -3,7 +3,8 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   admin: null,
   accessToken: null,
-  status: 'idle', // idle | checking | authenticated | unauthenticated
+  permissions: [],
+  status: 'idle', // idle | checking | authenticated | guest
 };
 
 const authSlice = createSlice({
@@ -14,17 +15,17 @@ const authSlice = createSlice({
       state.status = 'checking';
     },
     setCredentials: (state, action) => {
-      const { admin, accessToken } = action.payload;
+      const { admin, accessToken, permissions } = action.payload;
+      state.admin = admin;
       state.accessToken = accessToken;
-      if (admin !== undefined) {
-        state.admin = admin;
-      }
+      state.permissions = permissions;
       state.status = 'authenticated';
     },
     logout: (state) => {
       state.admin = null;
       state.accessToken = null;
-      state.status = 'unauthenticated';
+      state.permissions = [];
+      state.status = 'guest';
     },
   },
 });

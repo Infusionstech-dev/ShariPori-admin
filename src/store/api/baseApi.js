@@ -3,6 +3,8 @@ import { Mutex } from 'async-mutex';
 import { logout, setCredentials } from '../slices/authSlice';
 
 const REFRESH_URL = '/admin/auth/refresh';
+// A 401 from these means bad credentials or a dead session, not an expired access token.
+const NO_REAUTH_URLS = ['/admin/auth/login', REFRESH_URL, '/admin/auth/logout'];
 
 const refreshMutex = new Mutex();
 
@@ -18,17 +20,20 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
-// A 401 from /admin/auth/* means bad credentials or a dead session, not an expired access token.
-const isAuthRequest = (args) => {
+const needsRefresh = (args, error) => {
   const url = typeof args === 'string' ? args : args.url;
-  return url.startsWith('/admin/auth/');
+  if (NO_REAUTH_URLS.includes(url)) {
+    return false;
+  }
+  return error?.status === 401 || error?.data?.code === 'TOKEN_EXPIRED';
 };
 
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   await refreshMutex.waitForUnlock();
-  let result = await baseQuery(args, api, extraOptions);
+  const tokenUsed = api.getState().auth.accessToken;
+  const result = await baseQuery(args, api, extraOptions);
 
-  if (result.error?.status !== 401 || isAuthRequest(args)) {
+  if (!needsRefresh(args, result.error)) {
     return result;
   }
 
@@ -40,19 +45,23 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
   const release = await refreshMutex.acquire();
   try {
+    // A refresh may have finished while this request was in flight.
+    if (api.getState().auth.accessToken !== tokenUsed) {
+      return await baseQuery(args, api, extraOptions);
+    }
+
     const refresh = await baseQuery({ url: REFRESH_URL, method: 'POST' }, api, extraOptions);
 
     if (refresh.data?.data?.accessToken) {
       api.dispatch(setCredentials(refresh.data.data));
-      result = await baseQuery(args, api, extraOptions);
-    } else {
-      api.dispatch(logout());
+      return await baseQuery(args, api, extraOptions);
     }
+
+    api.dispatch(logout());
+    return result;
   } finally {
     release();
   }
-
-  return result;
 };
 
 export const baseApi = createApi({
@@ -77,11 +86,5 @@ export const baseApi = createApi({
     'Setting',
     'User',
   ],
-  endpoints: (builder) => ({
-    refreshSession: builder.mutation({
-      query: () => ({ url: REFRESH_URL, method: 'POST' }),
-    }),
-  }),
+  endpoints: () => ({}),
 });
-
-export const { useRefreshSessionMutation } = baseApi;
