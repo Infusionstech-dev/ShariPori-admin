@@ -2,7 +2,13 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 
 import { useRefreshMutation } from '../store/api/authApi';
-import { logout, sessionCheckStarted, setCredentials } from '../store/slices/authSlice';
+import { isSessionRejected } from '../store/api/baseApi';
+import {
+  logout,
+  sessionCheckStarted,
+  sessionUnavailable,
+  setCredentials,
+} from '../store/slices/authSlice';
 
 // Returns true while the session is being restored from the refresh cookie.
 export default function useAuthBootstrap() {
@@ -22,7 +28,7 @@ export default function useAuthBootstrap() {
     refresh()
       .unwrap()
       .then((response) => dispatch(setCredentials(response.data)))
-      .catch(() => dispatch(logout()));
+      .catch((err) => dispatch(isSessionRejected(err?.status) ? logout() : sessionUnavailable()));
   }, [dispatch, refresh, store]);
 
   return status === 'idle' || status === 'checking';

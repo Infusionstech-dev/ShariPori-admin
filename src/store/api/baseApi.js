@@ -8,6 +8,8 @@ const NO_REAUTH_URLS = ['/admin/auth/login', REFRESH_URL, '/admin/auth/logout'];
 
 const refreshMutex = new Mutex();
 
+export const isSessionRejected = (status) => status === 401 || status === 403;
+
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   credentials: 'include',
@@ -20,15 +22,28 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+const urlOf = (args) => (typeof args === 'string' ? args : args.url);
+
+// The mutex only covers one tab. Tabs share the refresh cookie, and two tabs sending the same
+// token looks like theft to the API, so refreshes also queue across tabs. Each one then sends
+// whatever cookie the previous refresh left behind.
+const sendRefresh = (api, extraOptions) => {
+  const send = () => baseQuery({ url: REFRESH_URL, method: 'POST' }, api, extraOptions);
+  return navigator.locks ? navigator.locks.request('shari-admin-auth-refresh', send) : send();
+};
+
 const needsRefresh = (args, error) => {
-  const url = typeof args === 'string' ? args : args.url;
-  if (NO_REAUTH_URLS.includes(url)) {
+  if (NO_REAUTH_URLS.includes(urlOf(args))) {
     return false;
   }
   return error?.status === 401 || error?.data?.code === 'TOKEN_EXPIRED';
 };
 
 const baseQueryWithReauth = async (args, api, extraOptions) => {
+  if (urlOf(args) === REFRESH_URL) {
+    return sendRefresh(api, extraOptions);
+  }
+
   await refreshMutex.waitForUnlock();
   const tokenUsed = api.getState().auth.accessToken;
   const result = await baseQuery(args, api, extraOptions);
@@ -50,14 +65,17 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
       return await baseQuery(args, api, extraOptions);
     }
 
-    const refresh = await baseQuery({ url: REFRESH_URL, method: 'POST' }, api, extraOptions);
+    const refresh = await sendRefresh(api, extraOptions);
 
     if (refresh.data?.data?.accessToken) {
       api.dispatch(setCredentials(refresh.data.data));
       return await baseQuery(args, api, extraOptions);
     }
 
-    api.dispatch(logout());
+    // A rate limit or network failure says nothing about the session, so keep it.
+    if (isSessionRejected(refresh.error?.status)) {
+      api.dispatch(logout());
+    }
     return result;
   } finally {
     release();
