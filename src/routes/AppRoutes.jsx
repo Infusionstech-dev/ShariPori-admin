@@ -1,5 +1,7 @@
+import { Spin } from 'antd';
 import { Route, Routes } from 'react-router-dom';
 
+import useAuthBootstrap from '../hooks/useAuthBootstrap';
 import AdminLayout from '../layouts/AdminLayout';
 import AttributesPage from '../pages/AttributesPage';
 import BannersPage from '../pages/BannersPage';
@@ -20,33 +22,51 @@ import ProductNewPage from '../pages/ProductNewPage';
 import ProductsPage from '../pages/ProductsPage';
 import ReportsPage from '../pages/ReportsPage';
 import SettingsPage from '../pages/SettingsPage';
-import UsersPage from '../pages/UsersPage';
+import UsersPage from '../pages/users/UsersPage';
 import ProtectedRoute from './ProtectedRoute';
 
+const PAGES = [
+  { path: '/', element: <DashboardPage />, permission: 'dashboard.view' },
+  { path: 'orders', element: <OrdersPage />, permission: 'orders.view' },
+  { path: 'orders/:id', element: <OrderDetailPage />, permission: 'orders.view' },
+  { path: 'products', element: <ProductsPage />, permission: 'products.view' },
+  { path: 'products/new', element: <ProductNewPage />, permission: 'products.create' },
+  { path: 'products/:id/edit', element: <ProductEditPage />, permission: 'products.update' },
+  { path: 'packages', element: <PackagesPage />, permission: 'products.view' },
+  { path: 'categories', element: <CategoriesPage />, permission: 'products.view' },
+  { path: 'attributes', element: <AttributesPage />, permission: 'products.view' },
+  { path: 'inventory', element: <InventoryPage />, permission: 'inventory.view' },
+  { path: 'customers', element: <CustomersPage />, permission: 'customers.view' },
+  { path: 'customers/:id', element: <CustomerDetailPage />, permission: 'customers.view' },
+  { path: 'coupons', element: <CouponsPage />, permission: 'coupons.view' },
+  { path: 'banners', element: <BannersPage />, permission: 'content.view' },
+  { path: 'pages', element: <ContentPagesPage />, permission: 'content.view' },
+  { path: 'reports', element: <ReportsPage />, permission: 'reports.view' },
+  { path: 'settings', element: <SettingsPage />, permission: 'settings.manage' },
+  { path: 'users', element: <UsersPage />, permission: 'users.manage' },
+];
+
 export default function AppRoutes() {
+  const checking = useAuthBootstrap();
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AdminLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="orders/:id" element={<OrderDetailPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="products/new" element={<ProductNewPage />} />
-          <Route path="products/:id/edit" element={<ProductEditPage />} />
-          <Route path="packages" element={<PackagesPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
-          <Route path="attributes" element={<AttributesPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
-          <Route path="customers" element={<CustomersPage />} />
-          <Route path="customers/:id" element={<CustomerDetailPage />} />
-          <Route path="coupons" element={<CouponsPage />} />
-          <Route path="banners" element={<BannersPage />} />
-          <Route path="pages" element={<ContentPagesPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="users" element={<UsersPage />} />
+          {PAGES.map(({ path, element, permission }) => (
+            <Route key={path} element={<ProtectedRoute permission={permission} />}>
+              <Route path={path} element={element} />
+            </Route>
+          ))}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Route>

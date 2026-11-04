@@ -1,21 +1,16 @@
 import { BellOutlined, LogoutOutlined, MenuOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Badge, Button, Dropdown, Input, Layout } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
-import { logout } from '../store/slices/authSlice';
+import useLogout from '../hooks/useLogout';
 
 export default function Topbar({ onToggleMenu }) {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const logout = useLogout();
   const admin = useSelector((state) => state.auth.admin);
 
   const profileMenu = {
     items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'Logout' }],
-    onClick: () => {
-      dispatch(logout());
-      navigate('/login');
-    },
+    onClick: logout,
   };
 
   return (

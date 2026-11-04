@@ -14,36 +14,54 @@ import {
 import { Drawer, Layout, Menu } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 
-const link = (to, label, icon) => ({ key: to, icon, label: <Link to={to}>{label}</Link> });
+import usePermission from '../hooks/usePermission';
+
+const link = (to, label, permission, icon) => ({
+  key: to,
+  icon,
+  permission,
+  label: <Link to={to}>{label}</Link>,
+});
 
 const MENU_ITEMS = [
-  link('/', 'Dashboard', <DashboardOutlined />),
-  link('/orders', 'Orders', <ShoppingCartOutlined />),
+  link('/', 'Dashboard', 'dashboard.view', <DashboardOutlined />),
+  link('/orders', 'Orders', 'orders.view', <ShoppingCartOutlined />),
   {
     key: 'products-group',
     icon: <AppstoreOutlined />,
     label: 'Products',
     children: [
-      link('/products', 'All'),
-      link('/products/new', 'Add new'),
-      link('/packages', 'Packages'),
-      link('/categories', 'Categories'),
-      link('/attributes', 'Fabrics/Sizes/Colours'),
+      link('/products', 'All', 'products.view'),
+      link('/products/new', 'Add new', 'products.create'),
+      link('/packages', 'Packages', 'products.view'),
+      link('/categories', 'Categories', 'products.view'),
+      link('/attributes', 'Fabrics/Sizes/Colours', 'products.view'),
     ],
   },
-  link('/inventory', 'Inventory', <DatabaseOutlined />),
-  link('/customers', 'Customers', <TeamOutlined />),
-  link('/coupons', 'Coupons', <GiftOutlined />),
+  link('/inventory', 'Inventory', 'inventory.view', <DatabaseOutlined />),
+  link('/customers', 'Customers', 'customers.view', <TeamOutlined />),
+  link('/coupons', 'Coupons', 'coupons.view', <GiftOutlined />),
   {
     key: 'content-group',
     icon: <FileTextOutlined />,
     label: 'Content',
-    children: [link('/banners', 'Banners'), link('/pages', 'Pages')],
+    children: [link('/banners', 'Banners', 'content.view'), link('/pages', 'Pages', 'content.view')],
   },
-  link('/reports', 'Reports', <BarChartOutlined />),
-  link('/settings', 'Settings', <SettingOutlined />),
-  link('/users', 'Users', <UserOutlined />),
+  link('/reports', 'Reports', 'reports.view', <BarChartOutlined />),
+  link('/settings', 'Settings', 'settings.manage', <SettingOutlined />),
+  link('/users', 'Users', 'users.manage', <UserOutlined />),
 ];
+
+// Hides what the role cannot open, and any group left with no items. The permission key
+// is removed because antd would otherwise pass it to the DOM.
+const visibleItems = (items, can) =>
+  items.flatMap(({ permission, children, ...item }) => {
+    if (children) {
+      const visible = visibleItems(children, can);
+      return visible.length ? [{ ...item, children: visible }] : [];
+    }
+    return can(permission) ? [item] : [];
+  });
 
 const PRODUCT_PATHS = ['/products', '/packages', '/categories', '/attributes'];
 const CONTENT_PATHS = ['/banners', '/pages'];
@@ -65,11 +83,12 @@ const openGroup = (pathname) => {
 
 export default function Sidebar({ isMobile, collapsed, drawerOpen, onCloseDrawer }) {
   const { pathname } = useLocation();
+  const can = usePermission();
 
   const menu = (
     <Menu
       mode="inline"
-      items={MENU_ITEMS}
+      items={visibleItems(MENU_ITEMS, can)}
       selectedKeys={[selectedKey(pathname)]}
       defaultOpenKeys={openGroup(pathname)}
       onClick={onCloseDrawer}
