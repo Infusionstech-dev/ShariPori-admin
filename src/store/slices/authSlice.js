@@ -4,7 +4,7 @@ const initialState = {
   admin: null,
   accessToken: null,
   permissions: [],
-  status: 'idle', // idle | checking | authenticated | guest
+  status: 'idle', // idle | checking | authenticated | guest | unavailable
 };
 
 const authSlice = createSlice({
@@ -13,6 +13,10 @@ const authSlice = createSlice({
   reducers: {
     sessionCheckStarted: (state) => {
       state.status = 'checking';
+    },
+    // The session could not be checked (rate limit or network), which does not mean it ended.
+    sessionUnavailable: (state) => {
+      state.status = 'unavailable';
     },
     setCredentials: (state, action) => {
       const { admin, accessToken, permissions } = action.payload;
@@ -30,5 +34,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { sessionCheckStarted, setCredentials, logout } = authSlice.actions;
+export const { sessionCheckStarted, sessionUnavailable, setCredentials, logout } =
+  authSlice.actions;
 export default authSlice.reducer;
