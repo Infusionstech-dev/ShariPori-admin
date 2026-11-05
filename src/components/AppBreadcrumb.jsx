@@ -8,6 +8,8 @@ const CRUMBS = [
   { path: '/products/new', trail: [['Products', '/products'], ['Add new']] },
   { path: '/products/:id/edit', trail: [['Products', '/products'], ['Edit']] },
   { path: '/packages', trail: [['Products', '/products'], ['Packages']] },
+  { path: '/packages/new', trail: [['Packages', '/packages'], ['Add package']] },
+  { path: '/packages/:id/edit', trail: [['Packages', '/packages'], ['Edit package']] },
   { path: '/categories', trail: [['Products', '/products'], ['Categories']] },
   { path: '/attributes', trail: [['Products', '/products'], ['Fabrics/Sizes/Colours']] },
   { path: '/inventory', trail: [['Inventory']] },
