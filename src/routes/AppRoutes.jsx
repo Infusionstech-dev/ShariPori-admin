@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 
 import useAuthBootstrap from '../hooks/useAuthBootstrap';
 import AdminLayout from '../layouts/AdminLayout';
-import AttributesPage from '../pages/AttributesPage';
+import AttributesPage from '../pages/attributes/AttributesPage';
 import BannersPage from '../pages/BannersPage';
 import CategoriesPage from '../pages/categories/CategoriesPage';
 import ContentPagesPage from '../pages/ContentPagesPage';
