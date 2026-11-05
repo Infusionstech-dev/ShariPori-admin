@@ -61,7 +61,7 @@ const sortOrderFor = (key, sort) => {
   return sort === descend ? 'descend' : null;
 };
 
-const editPath = (product, isBundle) => (isBundle ? '/packages' : `/products/${product.id}/edit`);
+const editPath = (product, isBundle) => (isBundle ? `/packages/${product.id}/edit` : `/products/${product.id}/edit`);
 
 function Thumbnail({ src }) {
   const [failedSrc, setFailedSrc] = useState(null);

@@ -267,10 +267,10 @@ export default function ProductFormPage() {
     return (
       <Result
         title="This is a package"
-        subTitle="Packages are edited on the Packages page."
+        subTitle="Packages have their own editor."
         extra={
-          <Link to="/packages">
-            <Button type="primary">Go to Packages</Button>
+          <Link to={`/packages/${product.id}/edit`}>
+            <Button type="primary">Edit this package</Button>
           </Link>
         }
       />
