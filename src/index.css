@@ -15,3 +15,8 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
 }
+
+/* Lets long tree rows shrink to fit a phone instead of overflowing. */
+.ant-tree .ant-tree-node-content-wrapper {
+  min-width: 0;
+}
