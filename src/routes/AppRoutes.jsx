@@ -5,7 +5,7 @@ import useAuthBootstrap from '../hooks/useAuthBootstrap';
 import AdminLayout from '../layouts/AdminLayout';
 import AttributesPage from '../pages/AttributesPage';
 import BannersPage from '../pages/BannersPage';
-import CategoriesPage from '../pages/CategoriesPage';
+import CategoriesPage from '../pages/categories/CategoriesPage';
 import ContentPagesPage from '../pages/ContentPagesPage';
 import CouponsPage from '../pages/CouponsPage';
 import CustomerDetailPage from '../pages/CustomerDetailPage';
