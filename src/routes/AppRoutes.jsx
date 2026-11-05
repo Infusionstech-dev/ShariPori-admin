@@ -17,9 +17,8 @@ import NotFound from '../pages/NotFound';
 import OrderDetailPage from '../pages/OrderDetailPage';
 import OrdersPage from '../pages/OrdersPage';
 import PackagesPage from '../pages/PackagesPage';
-import ProductEditPage from '../pages/ProductEditPage';
-import ProductNewPage from '../pages/ProductNewPage';
 import ProductsPage from '../pages/products/ProductListPage';
+import ProductFormPage from '../pages/products/ProductFormPage';
 import ReportsPage from '../pages/ReportsPage';
 import SettingsPage from '../pages/SettingsPage';
 import UsersPage from '../pages/users/UsersPage';
@@ -30,8 +29,8 @@ const PAGES = [
   { path: 'orders', element: <OrdersPage />, permission: 'orders.view' },
   { path: 'orders/:id', element: <OrderDetailPage />, permission: 'orders.view' },
   { path: 'products', element: <ProductsPage />, permission: 'products.view' },
-  { path: 'products/new', element: <ProductNewPage />, permission: 'products.create' },
-  { path: 'products/:id/edit', element: <ProductEditPage />, permission: 'products.update' },
+  { path: 'products/new', element: <ProductFormPage key="new" />, permission: 'products.create' },
+  { path: 'products/:id/edit', element: <ProductFormPage key="edit" />, permission: 'products.update' },
   { path: 'packages', element: <PackagesPage />, permission: 'products.view' },
   { path: 'categories', element: <CategoriesPage />, permission: 'products.view' },
   { path: 'attributes', element: <AttributesPage />, permission: 'products.view' },

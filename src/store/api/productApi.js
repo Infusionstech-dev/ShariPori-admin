@@ -55,6 +55,19 @@ const productApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Product'],
     }),
+    updateImage: builder.mutation({
+      query: ({ id, imageId, colorId }) => ({
+        url: `/admin/products/${id}/images/${imageId}`,
+        method: 'PATCH',
+        body: { colorId },
+      }),
+      invalidatesTags: ['Product'],
+    }),
+    getMatchGroups: builder.query({
+      query: () => '/admin/products/match-groups',
+      transformResponse: (response) => response.data,
+      providesTags: ['Product'],
+    }),
     deleteImage: builder.mutation({
       query: ({ id, imageId }) => ({
         url: `/admin/products/${id}/images/${imageId}`,
@@ -76,4 +89,6 @@ export const {
   useAddImagesMutation,
   useReorderImagesMutation,
   useDeleteImageMutation,
+  useUpdateImageMutation,
+  useGetMatchGroupsQuery,
 } = productApi;
