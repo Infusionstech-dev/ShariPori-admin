@@ -19,7 +19,7 @@ import OrdersPage from '../pages/OrdersPage';
 import PackagesPage from '../pages/PackagesPage';
 import ProductEditPage from '../pages/ProductEditPage';
 import ProductNewPage from '../pages/ProductNewPage';
-import ProductsPage from '../pages/ProductsPage';
+import ProductsPage from '../pages/products/ProductListPage';
 import ReportsPage from '../pages/ReportsPage';
 import SettingsPage from '../pages/SettingsPage';
 import UsersPage from '../pages/users/UsersPage';

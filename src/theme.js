@@ -1,6 +1,7 @@
 const theme = {
   token: {
     colorPrimary: '#7A1F3D',
+    colorLink: '#7A1F3D',
     borderRadius: 8,
     fontFamily: "Inter, 'Hind Siliguri', sans-serif",
   },
