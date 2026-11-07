@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { EyeOutlined, PlusOutlined, PrinterOutlined } from '@ant-design/icons';
+import { EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import {
-  App,
   Button,
   Card,
   DatePicker,
@@ -19,6 +18,7 @@ import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 
 import ChangeStatusModal from '../../components/orders/ChangeStatusModal';
+import InvoiceButton from '../../components/orders/InvoiceButton';
 import OrderQuickView from '../../components/orders/OrderQuickView';
 import {
   PAYMENT_METHODS,
@@ -26,7 +26,6 @@ import {
   STATUSES,
   STATUS_LABELS,
   formatDhaka,
-  printInvoicePlaceholder,
 } from '../../components/orders/orderText';
 import StatusTag from '../../components/orders/StatusTag';
 import usePermission from '../../hooks/usePermission';
@@ -43,7 +42,6 @@ const dayStart = (value) => `${value}T00:00:00+06:00`;
 const dayEnd = (value) => `${value}T23:59:59+06:00`;
 
 export default function OrderListPage() {
-  const { message } = App.useApp();
   const can = usePermission();
   const { filters, page, limit, sort, setFilters, setPage, setSort, reset } = useTableParams();
   const {
@@ -198,14 +196,7 @@ export default function OrderListPage() {
               onClick={() => setQuickId(order.id)}
             />
           </Tooltip>
-          <Tooltip title="Print invoice">
-            <Button
-              type="text"
-              aria-label={`Print invoice ${order.orderNo}`}
-              icon={<PrinterOutlined />}
-              onClick={() => printInvoicePlaceholder(message)}
-            />
-          </Tooltip>
+          <InvoiceButton ids={order.id} label={`Print invoice ${order.orderNo}`} iconOnly />
           <Link to={`/orders/${order.id}`}>
             <Button type="link" size="small">
               Open
@@ -306,13 +297,7 @@ export default function OrderListPage() {
             <Button size="small" type="primary" onClick={() => setStatusOrders(selectedOrders)}>
               Change status
             </Button>
-            <Button
-              size="small"
-              icon={<PrinterOutlined />}
-              onClick={() => printInvoicePlaceholder(message)}
-            >
-              Print invoices
-            </Button>
+            <InvoiceButton size="small" ids={selected} label="Print invoices" />
             <Button size="small" type="text" onClick={() => setSelected([])}>
               Clear selection
             </Button>

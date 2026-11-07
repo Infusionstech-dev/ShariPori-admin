@@ -59,6 +59,22 @@ const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Order', 'Product', 'Package', 'Inventory'],
     }),
+    // ids: one order id or several. The PDF becomes an object URL string, because the store
+    // must only hold plain data. Each call makes a fresh PDF, so nothing is cached.
+    getInvoice: builder.query({
+      query: (ids) => {
+        const list = [].concat(ids);
+        return {
+          ...(list.length === 1
+            ? { url: `/admin/orders/${list[0]}/invoice` }
+            : { url: '/admin/orders/invoices', method: 'POST', body: { ids: list } }),
+          responseHandler: async (response) =>
+            response.ok ? URL.createObjectURL(await response.blob()) : response.json(),
+          cache: 'no-store',
+        };
+      },
+      keepUnusedDataFor: 0,
+    }),
     // Public endpoints, used by the new order page for zones and live totals.
     getDeliveryZones: builder.query({
       query: () => '/delivery-zones',
@@ -84,4 +100,5 @@ export const {
   useBulkOrderStatusMutation,
   useGetDeliveryZonesQuery,
   useGetQuoteQuery,
+  useLazyGetInvoiceQuery,
 } = orderApi;

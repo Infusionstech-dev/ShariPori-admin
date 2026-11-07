@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { EditOutlined, PrinterOutlined } from '@ant-design/icons';
+import { EditOutlined } from '@ant-design/icons';
 import {
   App,
   Button,
@@ -22,7 +22,8 @@ import OrderItemsTable from '../../components/orders/OrderItemsTable';
 import OrderTimeline from '../../components/orders/OrderTimeline';
 import OrderTotals from '../../components/orders/OrderTotals';
 import PaymentPanel from '../../components/orders/PaymentPanel';
-import { SOURCES, formatDhaka, printInvoicePlaceholder } from '../../components/orders/orderText';
+import InvoiceButton from '../../components/orders/InvoiceButton';
+import { SOURCES, formatDhaka } from '../../components/orders/orderText';
 import StatusTag from '../../components/orders/StatusTag';
 import usePermission from '../../hooks/usePermission';
 import {
@@ -148,7 +149,6 @@ function AdminNote({ order, canEdit }) {
 }
 
 export default function OrderDetailPage() {
-  const { message } = App.useApp();
   const { id } = useParams();
   const can = usePermission();
   const canUpdate = can('orders.update');
@@ -198,9 +198,7 @@ export default function OrderDetailPage() {
               Edit items
             </Button>
           )}
-          <Button icon={<PrinterOutlined />} onClick={() => printInvoicePlaceholder(message)}>
-            Print invoice
-          </Button>
+          <InvoiceButton ids={order.id} />
         </Space>
       </div>
 
