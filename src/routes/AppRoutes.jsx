@@ -10,7 +10,7 @@ import ContentPagesPage from '../pages/ContentPagesPage';
 import CouponsPage from '../pages/CouponsPage';
 import CustomerDetailPage from '../pages/customers/CustomerDetailPage';
 import CustomersPage from '../pages/customers/CustomerListPage';
-import DashboardPage from '../pages/DashboardPage';
+import DashboardPage from '../pages/dashboard/DashboardPage';
 import InventoryPage from '../pages/inventory/InventoryPage';
 import MovementsPage from '../pages/inventory/MovementsPage';
 import LoginPage from '../pages/LoginPage';
