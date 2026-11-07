@@ -11,7 +11,7 @@ const unitPrice = (variant, product) =>
 
 function VariantRow({ variant, product, added, onAdd }) {
   const [quantity, setQuantity] = useState(1);
-  const label = `${variant.size?.label} / ${variant.color?.name}`;
+  const label = [variant.size?.label, variant.color?.name].filter(Boolean).join(' / ') || 'Package';
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-soft py-2 last:border-0">
@@ -92,7 +92,7 @@ function ProductVariants({ productId, thumbnail, addedIds, onAdd }) {
   ));
 }
 
-export default function VariantPicker({ open, onClose, addedIds, onAdd }) {
+export default function VariantPicker({ open, onClose, addedIds, onAdd, allowPackages = false }) {
   const [text, setText] = useState('');
   const [search, setSearch] = useState('');
 
@@ -101,9 +101,15 @@ export default function VariantPicker({ open, onClose, addedIds, onAdd }) {
     return () => clearTimeout(timer);
   }, [text]);
 
-  // Only active single products: a package cannot contain a package or a hidden product.
+  // Only active products. A package cannot contain a package, but an order can.
   const { data, isFetching, isError, refetch } = useGetProductsQuery(
-    { type: 'single', status: 'active', q: search, limit: 30, sort: 'name' },
+    {
+      ...(allowPackages ? {} : { type: 'single' }),
+      status: 'active',
+      q: search,
+      limit: 30,
+      sort: 'name',
+    },
     { skip: !open }
   );
   const products = data?.data ?? [];

@@ -14,8 +14,9 @@ import DashboardPage from '../pages/DashboardPage';
 import InventoryPage from '../pages/InventoryPage';
 import LoginPage from '../pages/LoginPage';
 import NotFound from '../pages/NotFound';
-import OrderDetailPage from '../pages/OrderDetailPage';
-import OrdersPage from '../pages/OrdersPage';
+import NewOrderPage from '../pages/orders/NewOrderPage';
+import OrderDetailPage from '../pages/orders/OrderDetailPage';
+import OrdersPage from '../pages/orders/OrderListPage';
 import PackageBuilderPage from '../pages/packages/PackageBuilderPage';
 import PackageListPage from '../pages/packages/PackageListPage';
 import ProductsPage from '../pages/products/ProductListPage';
@@ -28,6 +29,7 @@ import ProtectedRoute from './ProtectedRoute';
 const PAGES = [
   { path: '/', element: <DashboardPage />, permission: 'dashboard.view' },
   { path: 'orders', element: <OrdersPage />, permission: 'orders.view' },
+  { path: 'orders/new', element: <NewOrderPage />, permission: 'orders.create' },
   { path: 'orders/:id', element: <OrderDetailPage />, permission: 'orders.view' },
   { path: 'products', element: <ProductsPage />, permission: 'products.view' },
   { path: 'products/new', element: <ProductFormPage key="new" />, permission: 'products.create' },
