@@ -51,7 +51,3 @@ const dhakaTime = new Intl.DateTimeFormat('en-GB', {
 });
 
 export const formatDhaka = (value) => (value ? dhakaTime.format(new Date(value)) : '');
-
-// T7.3 builds invoices. Until then the print buttons say so.
-export const printInvoicePlaceholder = (message) =>
-  message.info('Invoice printing arrives with the next update');
