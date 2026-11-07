@@ -14,6 +14,7 @@ const CRUMBS = [
   { path: '/categories', trail: [['Products', '/products'], ['Categories']] },
   { path: '/attributes', trail: [['Products', '/products'], ['Fabrics/Sizes/Colours']] },
   { path: '/inventory', trail: [['Inventory']] },
+  { path: '/inventory/movements', trail: [['Inventory', '/inventory'], ['Stock movements']] },
   { path: '/customers', trail: [['Customers']] },
   { path: '/customers/:id', trail: [['Customers', '/customers'], ['Customer details']] },
   { path: '/coupons', trail: [['Coupons']] },
