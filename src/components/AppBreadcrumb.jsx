@@ -3,6 +3,7 @@ import { Link, matchPath, useLocation } from 'react-router-dom';
 
 const CRUMBS = [
   { path: '/orders', trail: [['Orders']] },
+  { path: '/orders/new', trail: [['Orders', '/orders'], ['New order']] },
   { path: '/orders/:id', trail: [['Orders', '/orders'], ['Order details']] },
   { path: '/products', trail: [['Products']] },
   { path: '/products/new', trail: [['Products', '/products'], ['Add new']] },
