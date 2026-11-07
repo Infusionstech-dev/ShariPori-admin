@@ -32,7 +32,7 @@ export default function OrderQuickView({ orderId, onClose, onChangeStatus }) {
   } else if (order) {
     const { address } = order;
     content = (
-      <Space direction="vertical" size="large" className="w-full">
+      <Space orientation="vertical" size="large" className="w-full">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <StatusTag status={order.status} />
           <span className="text-sm text-text/60">{formatDhaka(order.createdAt)}</span>

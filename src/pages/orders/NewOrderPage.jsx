@@ -61,13 +61,15 @@ export default function NewOrderPage() {
   const quoteArgs = useDebounced(
     JSON.stringify({
       items,
-      deliveryZoneId: deliveryZoneId ?? 0,
+      deliveryZoneId: deliveryZoneId || undefined,
       couponCode: couponCode || null,
     }),
     QUOTE_DELAY_MS
   );
-  const { data: quote, isFetching } = useGetQuoteQuery(JSON.parse(quoteArgs), {
-    skip: !items.length,
+  // Skip on the delayed arguments themselves: the live list can be ahead of what is sent.
+  const quoteBody = JSON.parse(quoteArgs);
+  const { data: quote, isFetching } = useGetQuoteQuery(quoteBody, {
+    skip: !quoteBody.items.length,
   });
 
   // Staff may agree a different charge or discount with the customer; the server checks it again.

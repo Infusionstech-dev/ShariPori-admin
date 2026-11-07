@@ -30,7 +30,7 @@ export default function PaymentPanel({ order, canEdit }) {
   };
 
   return (
-    <Space direction="vertical" className="w-full">
+    <Space orientation="vertical" className="w-full">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span>{PAYMENT_METHODS[order.paymentMethod]}</span>
         <Tag color={status.color}>{status.label}</Tag>
@@ -60,7 +60,7 @@ export default function PaymentPanel({ order, canEdit }) {
           />
           <InputNumber
             aria-label="Amount"
-            addonBefore="৳"
+            prefix="৳"
             min={0}
             precision={2}
             value={amount}

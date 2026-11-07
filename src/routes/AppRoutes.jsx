@@ -11,7 +11,8 @@ import CouponsPage from '../pages/CouponsPage';
 import CustomerDetailPage from '../pages/CustomerDetailPage';
 import CustomersPage from '../pages/CustomersPage';
 import DashboardPage from '../pages/DashboardPage';
-import InventoryPage from '../pages/InventoryPage';
+import InventoryPage from '../pages/inventory/InventoryPage';
+import MovementsPage from '../pages/inventory/MovementsPage';
 import LoginPage from '../pages/LoginPage';
 import NotFound from '../pages/NotFound';
 import NewOrderPage from '../pages/orders/NewOrderPage';
@@ -52,6 +53,7 @@ const PAGES = [
   { path: 'categories', element: <CategoriesPage />, permission: 'products.view' },
   { path: 'attributes', element: <AttributesPage />, permission: 'products.view' },
   { path: 'inventory', element: <InventoryPage />, permission: 'inventory.view' },
+  { path: 'inventory/movements', element: <MovementsPage />, permission: 'inventory.view' },
   { path: 'customers', element: <CustomersPage />, permission: 'customers.view' },
   { path: 'customers/:id', element: <CustomerDetailPage />, permission: 'customers.view' },
   { path: 'coupons', element: <CouponsPage />, permission: 'coupons.view' },

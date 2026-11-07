@@ -50,7 +50,7 @@ export default function DeliveryForm({ order, canEdit }) {
   }
 
   return (
-    <Space direction="vertical" className="w-full">
+    <Space orientation="vertical" className="w-full">
       <Select
         aria-label="Courier"
         placeholder="Courier"
@@ -76,7 +76,7 @@ export default function DeliveryForm({ order, canEdit }) {
       />
       <InputNumber
         aria-label="Delivery charge"
-        addonBefore="Delivery ৳"
+        prefix="Delivery ৳"
         min={0}
         precision={2}
         disabled={chargeLocked}

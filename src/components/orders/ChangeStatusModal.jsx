@@ -92,7 +92,7 @@ export default function ChangeStatusModal({ open, orders, onClose, canEditDelive
       destroyOnHidden
     >
       {options.length ? (
-        <Space direction="vertical" size="middle" className="w-full">
+        <Space orientation="vertical" size="middle" className="w-full">
           <Radio.Group
             value={status}
             onChange={(event) => setStatus(event.target.value)}
@@ -109,7 +109,7 @@ export default function ChangeStatusModal({ open, orders, onClose, canEditDelive
             </Typography.Text>
           )}
           {askDelivery && (
-            <Space direction="vertical" className="w-full">
+            <Space orientation="vertical" className="w-full">
               <Typography.Text strong>Courier</Typography.Text>
               <Select
                 aria-label="Courier"
