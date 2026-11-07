@@ -4,9 +4,10 @@ import { Route, Routes } from 'react-router-dom';
 import useAuthBootstrap from '../hooks/useAuthBootstrap';
 import AdminLayout from '../layouts/AdminLayout';
 import AttributesPage from '../pages/attributes/AttributesPage';
-import BannersPage from '../pages/BannersPage';
+import BannersPage from '../pages/content/BannersPage';
+import PageEditorPage from '../pages/content/PageEditorPage';
 import CategoriesPage from '../pages/categories/CategoriesPage';
-import ContentPagesPage from '../pages/ContentPagesPage';
+import ContentPagesPage from '../pages/content/PagesPage';
 import CouponsPage from '../pages/CouponsPage';
 import CustomerDetailPage from '../pages/customers/CustomerDetailPage';
 import CustomersPage from '../pages/customers/CustomerListPage';
@@ -23,7 +24,7 @@ import PackageListPage from '../pages/packages/PackageListPage';
 import ProductsPage from '../pages/products/ProductListPage';
 import ProductFormPage from '../pages/products/ProductFormPage';
 import ReportsPage from '../pages/ReportsPage';
-import SettingsPage from '../pages/SettingsPage';
+import SettingsPage from '../pages/content/SettingsPage';
 import UsersPage from '../pages/users/UsersPage';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -59,6 +60,8 @@ const PAGES = [
   { path: 'coupons', element: <CouponsPage />, permission: 'coupons.view' },
   { path: 'banners', element: <BannersPage />, permission: 'content.view' },
   { path: 'pages', element: <ContentPagesPage />, permission: 'content.view' },
+  { path: 'pages/new', element: <PageEditorPage key="new" />, permission: 'content.update' },
+  { path: 'pages/:id', element: <PageEditorPage key="edit" />, permission: 'content.view' },
   { path: 'reports', element: <ReportsPage />, permission: 'reports.view' },
   { path: 'settings', element: <SettingsPage />, permission: 'settings.manage' },
   { path: 'users', element: <UsersPage />, permission: 'users.manage' },

@@ -20,6 +20,8 @@ const CRUMBS = [
   { path: '/coupons', trail: [['Coupons']] },
   { path: '/banners', trail: [['Content'], ['Banners']] },
   { path: '/pages', trail: [['Content'], ['Pages']] },
+  { path: '/pages/new', trail: [['Content'], ['Pages', '/pages'], ['New page']] },
+  { path: '/pages/:id', trail: [['Content'], ['Pages', '/pages'], ['Edit page']] },
   { path: '/reports', trail: [['Reports']] },
   { path: '/settings', trail: [['Settings']] },
   { path: '/users', trail: [['Users']] },
