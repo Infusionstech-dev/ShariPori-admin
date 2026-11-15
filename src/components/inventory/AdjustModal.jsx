@@ -7,6 +7,7 @@ const REASONS = [
   { value: 'damaged', label: 'Damaged' },
   { value: 'lost', label: 'Lost' },
   { value: 'correction', label: 'Count correction' },
+  { value: 'new_added', label: 'New added' },
   { value: 'other', label: 'Other' },
 ];
 
