@@ -319,8 +319,9 @@ export default function OrderListPage() {
             scroll={{ x: 'max-content' }}
             rowClassName={(order) => (fresh.has(order.id) ? 'bg-amber-50' : '')}
             rowSelection={{ selectedRowKeys: selected, onChange: setSelected }}
-            onChange={(_, __, sorter) => {
-              if (sorter.columnKey === 'createdAt') {
+            onChange={(_, __, sorter, { action }) => {
+              // Page clicks also arrive here, and must not reset the page through the sort.
+              if (action === 'sort' && sorter.columnKey === 'createdAt') {
                 setSort(sorter.order === 'ascend' ? 'oldest' : undefined);
               }
             }}

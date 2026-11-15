@@ -114,7 +114,7 @@ export default function InventoryPage() {
   const can = usePermission();
   const canEdit = can('inventory.update');
   const { filters, page, limit, sort, setFilters, setPage, setSort, reset } = useTableParams({
-    defaultSort: 'stock_asc',
+    defaultSort: 'newest',
   });
   const { q: urlSearch = '', status, categoryId } = filters;
   const { data, isFetching, isError, refetch } = useGetInventoryQuery({
@@ -126,6 +126,13 @@ export default function InventoryPage() {
     ...(categoryId ? { categoryId } : {}),
   });
   const { data: categories } = useGetCategoriesQuery();
+  const totalPages = data?.meta.totalPages ?? 0;
+  // A shorter list (a new filter or a shared link) can leave the page past the end.
+  useEffect(() => {
+    if (!isFetching && totalPages > 0 && page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [isFetching, totalPages, page, setPage]);
   const [text, setText] = useState(urlSearch);
   const [stockInOpen, setStockInOpen] = useState(false);
   const [adjusting, setAdjusting] = useState(null);
@@ -278,9 +285,12 @@ export default function InventoryPage() {
             columns={columns}
             dataSource={data?.data ?? []}
             scroll={{ x: 'max-content' }}
-            onChange={(_, __, sorter) => {
-              if (sorter.columnKey === 'stock') {
-                setSort(sorter.order === 'descend' ? 'stock_desc' : 'stock_asc');
+            onChange={(_, __, sorter, { action }) => {
+              // Page clicks also arrive here, and must not reset the page through the sort.
+              if (action === 'sort' && sorter.columnKey === 'stock') {
+                // Clicking a third time clears the sort and goes back to newest first.
+                const byStock = { ascend: 'stock_asc', descend: 'stock_desc' };
+                setSort(byStock[sorter.order] ?? 'newest');
               }
             }}
             locale={{
