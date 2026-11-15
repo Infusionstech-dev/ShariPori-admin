@@ -181,6 +181,12 @@ export default function ProductFormPage() {
   const save = async (values, { addAnother }) => {
     // Checked first, so a bad link cannot leave behind a product without its images.
     const links = productId ? { urls: [], error: null } : parseImageLinks(imageText);
+    if (!links.error && !productId && !links.urls.length) {
+      links.error = 'Add at least one product image link';
+    }
+    if (!links.error && productId && !product?.images?.length) {
+      links.error = 'Add at least one product image, then save';
+    }
     setImageError(links.error);
     if (links.error) {
       goToFirstError([]);
@@ -210,9 +216,8 @@ export default function ProductFormPage() {
       } else if (productId) {
         message.success('Product saved');
       } else {
-        message.success(links.urls.length ? 'Product created with its images' : 'Product created');
+        message.success('Product created');
       }
-      const needsImages = !links.urls.length || imagesFailed;
 
       if (addAnother) {
         loadForm(EMPTY_PRODUCT);
@@ -221,7 +226,11 @@ export default function ProductFormPage() {
       } else {
         loadForm(toFormValues(response.data));
         if (!productId) {
-          setLeaveTo(`/products/${response.data.id}/edit${needsImages ? '?section=images' : ''}`);
+          // A new product goes back to the list. Only a failed image upload sends the admin to
+          // the edit page, to add the images again.
+          setLeaveTo(
+            imagesFailed ? `/products/${response.data.id}/edit?section=images` : '/products'
+          );
         }
       }
     } catch (err) {
