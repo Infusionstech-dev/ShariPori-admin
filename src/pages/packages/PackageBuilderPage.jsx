@@ -24,7 +24,7 @@ import { z } from 'zod';
 
 import RichTextEditor from '../../components/common/RichTextEditor';
 import FormField from '../../components/FormField';
-import VariantPicker from '../../components/products/VariantPicker';
+import InlineItemAdder from '../../components/products/InlineItemAdder';
 import { formatBDT } from '../../lib/format';
 import { useGetSizesQuery } from '../../store/api/attributeApi';
 import { TREE_ARGS, useGetCategoriesQuery } from '../../store/api/categoryApi';
@@ -62,17 +62,18 @@ const schema = z
     sizeOptions: z.array(z.number()),
     items: z
       .array(
+        // A text item has only a name. Product items, saved before, also carry their variant.
         z.object({
-          componentVariantId: z.number(),
+          componentVariantId: z.number().nullable().optional(),
+          name: z.string().min(1, 'Enter a name for every item'),
           quantity: z.number({ error: 'Enter a quantity for every item' }).int().min(1),
-          productName: z.string(),
           image: z.string().nullable().optional(),
-          size: z.string().nullable(),
-          color: z.string().nullable(),
-          unitPrice: z.number(),
-          stock: z.number(),
-          isActive: z.boolean(),
-          productStatus: z.string(),
+          size: z.string().nullable().optional(),
+          color: z.string().nullable().optional(),
+          unitPrice: z.number().nullable().optional(),
+          stock: z.number().nullable().optional(),
+          isActive: z.boolean().optional(),
+          productStatus: z.string().optional(),
         })
       )
       .min(2, 'A package needs at least 2 items'),
@@ -107,29 +108,40 @@ const toFormValues = (pkg) => ({
   isFeatured: pkg.isFeatured,
   packageLimit: pkg.packageLimit,
   sizeOptions: pkg.sizeOptions ?? [],
-  items: pkg.items.map((item) => ({
-    componentVariantId: item.componentVariantId,
-    quantity: item.quantity,
-    productName: item.productName,
-    image: item.image,
-    size: item.size,
-    color: item.color,
-    unitPrice: item.unitPrice,
-    stock: item.stock,
-    isActive: item.isActive,
-    productStatus: item.productStatus,
-  })),
+  items: pkg.items.map((item) =>
+    item.componentVariantId
+      ? {
+          componentVariantId: item.componentVariantId,
+          name: item.productName,
+          quantity: item.quantity,
+          image: item.image,
+          size: item.size,
+          color: item.color,
+          unitPrice: item.unitPrice,
+          stock: item.stock,
+          isActive: item.isActive,
+          productStatus: item.productStatus,
+        }
+      : { name: item.name, quantity: item.quantity }
+  ),
 });
 
 const toRequestBody = ({ items, ...values }) => ({
   ...values,
-  items: items.map(({ componentVariantId, quantity }) => ({ componentVariantId, quantity })),
+  items: items.map(({ componentVariantId, name, quantity }) =>
+    componentVariantId ? { componentVariantId, quantity } : { name, quantity }
+  ),
 });
 
-const capacity = (item) =>
-  item.isActive && item.productStatus === 'active' && item.quantity > 0
+// Text items hold no stock, so they never limit how many packages can be sold.
+const capacity = (item) => {
+  if (!item.componentVariantId) {
+    return Infinity;
+  }
+  return item.isActive && item.productStatus === 'active' && item.quantity > 0
     ? Math.floor(item.stock / item.quantity)
     : 0;
+};
 
 function Section({ id, title, hint, action, children }) {
   return (
@@ -186,7 +198,7 @@ export default function PackageBuilderPage() {
   const salePrice = useWatch({ control, name: 'salePrice' });
   const packageLimit = useWatch({ control, name: 'packageLimit' });
 
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [imageText, setImageText] = useState('');
   const [imageError, setImageError] = useState(null);
   const [leaveTo, setLeaveTo] = useState(null);
@@ -332,7 +344,7 @@ export default function PackageBuilderPage() {
   }));
 
   const separateTotal = items.reduce(
-    (total, item) => total + item.unitPrice * (item.quantity ?? 0),
+    (total, item) => total + (item.unitPrice ?? 0) * (item.quantity ?? 0),
     0
   );
   const onSale = salePrice > 0 && salePrice < basePrice;
@@ -346,25 +358,32 @@ export default function PackageBuilderPage() {
     {
       title: 'Item',
       key: 'item',
-      render: (_, item) => (
-        <span className="flex min-w-44 items-center gap-2">
-          {item.image ? (
-            <img src={item.image} alt="" className="size-10 max-w-none rounded object-cover" />
-          ) : (
-            <span className="flex size-10 shrink-0 items-center justify-center rounded bg-soft text-primary">
-              <PictureOutlined />
-            </span>
-          )}
-          <span>
-            <span className="block font-medium">{item.productName}</span>
-            <span className="block text-xs text-text/60">
-              {item.size} / {item.color}
+      render: (_, item) =>
+        item.componentVariantId ? (
+          <span className="flex min-w-44 items-center gap-2">
+            {item.image ? (
+              <img src={item.image} alt="" className="size-10 max-w-none rounded object-cover" />
+            ) : (
+              <span className="flex size-10 shrink-0 items-center justify-center rounded bg-soft text-primary">
+                <PictureOutlined />
+              </span>
+            )}
+            <span>
+              <span className="block font-medium">{item.name}</span>
+              <span className="block text-xs text-text/60">
+                {item.size} / {item.color}
+              </span>
             </span>
           </span>
-        </span>
-      ),
+        ) : (
+          <span className="block min-w-44 font-medium">{item.name}</span>
+        ),
     },
-    { title: 'Price', key: 'unit', render: (_, item) => formatBDT(item.unitPrice) },
+    {
+      title: 'Price',
+      key: 'unit',
+      render: (_, item) => (item.componentVariantId ? formatBDT(item.unitPrice) : '—'),
+    },
     {
       title: 'Qty',
       key: 'quantity',
@@ -374,7 +393,7 @@ export default function PackageBuilderPage() {
           min={1}
           precision={0}
           style={{ width: 64 }}
-          aria-label={`Quantity of ${item.productName}`}
+          aria-label={`Quantity of ${item.name}`}
           value={item.quantity}
           onChange={(value) =>
             updateItems(items.map((row, at) => (at === index ? { ...row, quantity: value } : row)))
@@ -385,21 +404,27 @@ export default function PackageBuilderPage() {
     {
       title: 'Stock',
       key: 'stock',
-      render: (_, item) =>
-        capacity(item) > 0 ? item.stock : <Tag color="red">{item.isActive ? 'Short' : 'Off'}</Tag>,
+      render: (_, item) => {
+        if (!item.componentVariantId) {
+          return '—';
+        }
+        return capacity(item) > 0 ? (
+          item.stock
+        ) : (
+          <Tag color="red">{item.isActive ? 'Short' : 'Off'}</Tag>
+        );
+      },
     },
     {
       title: '',
       key: 'remove',
-      render: (_, item) => (
+      render: (_, item, index) => (
         <Button
           type="text"
           danger
-          aria-label={`Remove ${item.productName}`}
+          aria-label={`Remove ${item.name}`}
           icon={<DeleteOutlined />}
-          onClick={() =>
-            updateItems(items.filter((row) => row.componentVariantId !== item.componentVariantId))
-          }
+          onClick={() => updateItems(items.filter((_row, at) => at !== index))}
         />
       ),
     },
@@ -479,7 +504,7 @@ export default function PackageBuilderPage() {
             title="Items in this package"
             hint="At least 2 items. Stock comes from each item's own product."
             action={
-              <Button icon={<PlusOutlined />} onClick={() => setPickerOpen(true)}>
+              <Button icon={<PlusOutlined />} onClick={() => setAdding(true)} disabled={adding}>
                 Add item
               </Button>
             }
@@ -493,9 +518,15 @@ export default function PackageBuilderPage() {
                 />
               </div>
             )}
+            {adding && (
+              <InlineItemAdder
+                onAdd={(item) => updateItems([...items, item])}
+                onCancel={() => setAdding(false)}
+              />
+            )}
             {items.length > 0 ? (
               <Table
-                rowKey="componentVariantId"
+                rowKey={(item) => items.indexOf(item)}
                 size="small"
                 columns={columns}
                 dataSource={items}
@@ -503,7 +534,9 @@ export default function PackageBuilderPage() {
                 scroll={{ x: 'max-content' }}
               />
             ) : (
-              <p className="mb-0 text-sm text-text/60">No items yet. Click Add item to start.</p>
+              <p className="mb-0 text-sm text-text/60">
+                {adding ? 'No items yet.' : 'No items yet. Click Add item to start.'}
+              </p>
             )}
           </Section>
 
@@ -590,12 +623,6 @@ export default function PackageBuilderPage() {
         </div>
       </div>
 
-      <VariantPicker
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        addedIds={items.map((item) => item.componentVariantId)}
-        onAdd={(item) => updateItems([...items, item])}
-      />
 
       <Modal
         open={blocker.state === 'blocked'}
