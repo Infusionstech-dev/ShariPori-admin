@@ -47,7 +47,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-2 font-display text-2xl text-primary">
           <TagsOutlined />
-          Shari Shop
+          ShariPori
         </div>
         <Form layout="vertical" component="div">
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
