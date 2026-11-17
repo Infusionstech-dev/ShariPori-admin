@@ -99,7 +99,7 @@ export default function Sidebar({ isMobile, collapsed, drawerOpen, onCloseDrawer
   const brand = (short) => (
     <div className="flex h-16 items-center justify-center gap-2 px-4 font-display text-xl text-primary">
       <TagsOutlined />
-      {!short && 'Shari Shop'}
+      {!short && 'ShariPori'}
     </div>
   );
 
@@ -110,7 +110,7 @@ export default function Sidebar({ isMobile, collapsed, drawerOpen, onCloseDrawer
         onClose={onCloseDrawer}
         placement="left"
         size={280}
-        title="Shari Shop"
+        title="ShariPori"
         styles={{ body: { padding: 0 } }}
       >
         {menu}
