@@ -121,6 +121,7 @@ function BannerModal({ banner, position, onClose }) {
         <Form.Item
           name="imageUrl"
           label="Image link (desktop)"
+          extra="Shown in full, never cropped. A wide image works best, for example 1600 × 600."
           rules={[{ required: true, type: 'url' }]}
         >
           <ImageUrlInput />
@@ -128,12 +129,17 @@ function BannerModal({ banner, position, onClose }) {
         <Form.Item
           name="mobileImageUrl"
           label="Image link for phones"
-          extra="Optional. A taller image that fits small screens."
+          extra="Optional. A taller image for small screens, for example 800 × 1000."
           rules={[{ type: 'url' }]}
         >
           <ImageUrlInput />
         </Form.Item>
-        <Form.Item name="title" label="Title" rules={[{ required: true, min: 2, max: 150 }]}>
+        <Form.Item
+          name="title"
+          label="Title"
+          extra="Slider: shown beside the image. Middle banner: shown on the image."
+          rules={[{ required: true, min: 2, max: 150 }]}
+        >
           <Input />
         </Form.Item>
         <Form.Item name="subtitle" label="Subtitle" rules={[{ max: 255 }]}>
