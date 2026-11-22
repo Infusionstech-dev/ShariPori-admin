@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Button, Input, InputNumber, Select, Space, Switch, Table } from 'antd';
 import { Controller, useWatch } from 'react-hook-form';
 
+import { formatBDT } from '../../../lib/format';
 import { useGetColorsQuery, useGetSizesQuery } from '../../../store/api/attributeApi';
 
 const GROUPS = [
@@ -11,6 +12,8 @@ const GROUPS = [
   { value: 'free', label: 'Free' },
 ];
 const DEFAULT_THRESHOLD = 5;
+const ALL_ROWS = 'all';
+const PRICE_WIDTH = { width: 104 };
 
 const comboKey = (row) => `${row.sizeId}:${row.colorId}`;
 
@@ -32,10 +35,19 @@ const activeIds = (rows, key) => [
   ...new Set(rows.filter((row) => row.isActive).map((row) => row[key])),
 ];
 
+// Which rows the price tool changes: every row, one size or one colour.
+const inTarget = (row, target) => {
+  if (target === ALL_ROWS) return true;
+  const [kind, id] = target.split(':');
+  return row[kind === 'size' ? 'sizeId' : 'colorId'] === Number(id);
+};
+
 export default function VariantsTab({ control, setValue, getValues, errors }) {
   const { data: sizes = [] } = useGetSizesQuery();
   const { data: colors = [] } = useGetColorsQuery();
   const rows = useWatch({ control, name: 'variants' }) ?? [];
+  const basePrice = useWatch({ control, name: 'basePrice' });
+  const productSale = useWatch({ control, name: 'salePrice' });
 
   // The parent gives this section a new key after each load, so these start from the saved rows.
   const [selectedSizes, setSelectedSizes] = useState(() =>
@@ -45,11 +57,14 @@ export default function VariantsTab({ control, setValue, getValues, errors }) {
     activeIds(getValues('variants'), 'colorId')
   );
   const [bulkStock, setBulkStock] = useState(null);
+  const [priceTarget, setPriceTarget] = useState(ALL_ROWS);
+  const [bulkPrice, setBulkPrice] = useState(null);
+  const [bulkSale, setBulkSale] = useState(null);
   const [wantsAdvanced, setWantsAdvanced] = useState(false);
 
-  const hasRowErrors = Array.isArray(errors.variants) && errors.variants.some(Boolean);
-  const hasOwnSettings = rows.some((row) => row.price !== null);
-  const showAdvanced = wantsAdvanced || hasRowErrors || hasOwnSettings;
+  const rowErrors = Array.isArray(errors.variants) ? errors.variants : [];
+  const hasHiddenErrors = rowErrors.some((error) => error?.sku || error?.lowStockThreshold);
+  const showAdvanced = wantsAdvanced || hasHiddenErrors;
 
   const sizeById = new Map(sizes.map((size) => [size.id, size]));
   const colorById = new Map(colors.map((color) => [color.id, color]));
@@ -64,8 +79,8 @@ export default function VariantsTab({ control, setValue, getValues, errors }) {
   const updateRows = (next) =>
     setValue('variants', next, { shouldDirty: true, shouldValidate: Boolean(errors.variants) });
 
-  // Rows follow the pickers. Saved rows keep their id and stock. One no longer picked is turned
-  // off, not deleted, because orders and stock history may point at it.
+  // Rows follow the pickers. Saved rows keep their id, stock and prices. One no longer picked is
+  // turned off, not deleted, because orders and stock history may point at it.
   const rebuild = (nextSizes, nextColors) => {
     const existing = new Map(rows.map((row) => [comboKey(row), row]));
     const wanted = nextSizes.flatMap((sizeId) =>
@@ -81,6 +96,7 @@ export default function VariantsTab({ control, setValue, getValues, errors }) {
             ...combo,
             sku: '',
             price: null,
+            salePrice: null,
             stockQty: 0,
             lowStockThreshold: DEFAULT_THRESHOLD,
             isActive: true,
@@ -101,6 +117,28 @@ export default function VariantsTab({ control, setValue, getValues, errors }) {
     setSelectedColors(next);
     rebuild(selectedSizes, next);
   };
+
+  const priceTargets = [
+    { value: ALL_ROWS, label: 'All rows' },
+    ...selectedSizes
+      .filter((id) => sizeById.has(id))
+      .map((id) => ({ value: `size:${id}`, label: `Size ${sizeById.get(id).label}` })),
+    ...selectedColors
+      .filter((id) => colorById.has(id))
+      .map((id) => ({ value: `color:${id}`, label: `Colour ${colorById.get(id).name}` })),
+  ];
+  // A removed size or colour drops out of the list, so the tool falls back to all rows.
+  const target = priceTargets.some((option) => option.value === priceTarget)
+    ? priceTarget
+    : ALL_ROWS;
+
+  const bulkSaleTooHigh = bulkPrice !== null && bulkSale !== null && bulkSale >= bulkPrice;
+  const applyPrices = (price, salePrice) =>
+    updateRows(
+      rows.map((row) =>
+        row.isActive && inTarget(row, target) ? { ...row, price, salePrice } : row
+      )
+    );
 
   const numberColumn = (title, field, label, extra = {}) => ({
     title,
@@ -127,6 +165,71 @@ export default function VariantsTab({ control, setValue, getValues, errors }) {
     ),
   });
 
+  const priceColumn = {
+    title: 'Price (৳)',
+    key: 'price',
+    render: (_, row, index) => (
+      <Controller
+        control={control}
+        name={`variants.${index}.price`}
+        render={({ field, fieldState }) => (
+          <>
+            <InputNumber
+              {...field}
+              size="small"
+              min={0}
+              style={PRICE_WIDTH}
+              aria-label={`Price for row ${index + 1}`}
+              // An empty row shows the product's price in grey, which is what it sells for.
+              placeholder={basePrice > 0 ? String(basePrice) : 'Same'}
+              status={fieldState.error ? 'error' : undefined}
+              onChange={(value) => {
+                field.onChange(value);
+                // Without its own price a row also loses its own sale price.
+                if (value === null && row.salePrice !== null) {
+                  setValue(`variants.${index}.salePrice`, null, { shouldDirty: true });
+                }
+              }}
+            />
+            <CellError error={fieldState.error} />
+          </>
+        )}
+      />
+    ),
+  };
+
+  const saleColumn = {
+    title: 'Sale price (৳)',
+    key: 'salePrice',
+    render: (_, row, index) => {
+      const ownPrice = row.price !== null && row.price !== undefined;
+      return (
+        <Controller
+          control={control}
+          name={`variants.${index}.salePrice`}
+          render={({ field, fieldState }) => (
+            <>
+              <InputNumber
+                {...field}
+                size="small"
+                min={0}
+                style={PRICE_WIDTH}
+                disabled={!ownPrice}
+                aria-label={`Sale price for row ${index + 1}`}
+                title={
+                  ownPrice ? undefined : 'Uses the product sale price. Add a price to change it.'
+                }
+                placeholder={ownPrice ? 'None' : productSale > 0 ? String(productSale) : '—'}
+                status={fieldState.error ? 'error' : undefined}
+              />
+              <CellError error={fieldState.error} />
+            </>
+          )}
+        />
+      );
+    },
+  };
+
   const columns = [
     {
       title: 'Variant',
@@ -142,9 +245,10 @@ export default function VariantsTab({ control, setValue, getValues, errors }) {
       },
     },
     numberColumn('Stock', 'stockQty', 'Stock', { precision: 0 }),
+    priceColumn,
+    saleColumn,
     ...(showAdvanced
       ? [
-          numberColumn('Own price (৳)', 'price', 'Price', { placeholder: 'Same' }),
           {
             title: 'SKU',
             key: 'sku',
@@ -259,14 +363,73 @@ export default function VariantsTab({ control, setValue, getValues, errors }) {
             <label className="flex items-center gap-2 text-sm">
               <Switch
                 size="small"
-                aria-label="Show price, SKU and low stock"
+                aria-label="Show SKU and low stock"
                 checked={showAdvanced}
-                disabled={hasRowErrors || hasOwnSettings}
+                disabled={hasHiddenErrors}
                 onChange={setWantsAdvanced}
               />
-              Own price, SKU and low stock
+              SKU and low stock
             </label>
           </div>
+
+          <div className="rounded-lg bg-soft/50 p-3">
+            <p className="mb-2 text-sm">
+              A size or colour can cost more or less than the product price. Leave a price empty to
+              use the product price
+              {basePrice > 0 && (
+                <>
+                  {' '}
+                  (<strong>{formatBDT(productSale > 0 ? productSale : basePrice)}</strong>)
+                </>
+              )}
+              .
+            </p>
+            <div className="flex flex-wrap items-start gap-2">
+              <Select
+                aria-label="Which rows get the price"
+                style={{ minWidth: 150 }}
+                options={priceTargets}
+                value={target}
+                onChange={setPriceTarget}
+              />
+              <InputNumber
+                aria-label="Price for the chosen rows"
+                min={0}
+                placeholder="Price"
+                style={PRICE_WIDTH}
+                value={bulkPrice}
+                onChange={(value) => {
+                  setBulkPrice(value);
+                  if (value === null) setBulkSale(null);
+                }}
+              />
+              <div>
+                <InputNumber
+                  aria-label="Sale price for the chosen rows"
+                  min={0}
+                  placeholder="Sale (optional)"
+                  style={{ width: 128 }}
+                  disabled={bulkPrice === null}
+                  status={bulkSaleTooHigh ? 'error' : undefined}
+                  value={bulkSale}
+                  onChange={setBulkSale}
+                />
+                {bulkSaleTooHigh && (
+                  <div className="mt-1 text-xs text-red-700">Must be below the price</div>
+                )}
+              </div>
+              <Button
+                disabled={bulkPrice === null || bulkSaleTooHigh}
+                onClick={() => applyPrices(bulkPrice, bulkSale)}
+              >
+                Set price
+              </Button>
+              <Button type="link" onClick={() => applyPrices(null, null)}>
+                Use product price
+              </Button>
+            </div>
+          </div>
+
           <Table
             rowKey={comboKey}
             columns={columns}

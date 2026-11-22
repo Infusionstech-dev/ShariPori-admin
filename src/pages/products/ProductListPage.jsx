@@ -61,7 +61,8 @@ const sortOrderFor = (key, sort) => {
   return sort === descend ? 'descend' : null;
 };
 
-const editPath = (product, isBundle) => (isBundle ? `/packages/${product.id}/edit` : `/products/${product.id}/edit`);
+const editPath = (product, isBundle) =>
+  isBundle ? `/packages/${product.id}/edit` : `/products/${product.id}/edit`;
 
 function Thumbnail({ src }) {
   const [failedSrc, setFailedSrc] = useState(null);
@@ -92,13 +93,15 @@ function StockCell({ product }) {
 }
 
 function PriceCell({ product }) {
-  if (product.salePrice === null) {
-    return formatBDT(product.basePrice);
-  }
   return (
     <span className="whitespace-nowrap">
-      {formatBDT(product.salePrice)}
-      <del className="block text-xs text-text/50">{formatBDT(product.basePrice)}</del>
+      {formatBDT(product.salePrice ?? product.basePrice)}
+      {product.salePrice !== null && (
+        <del className="block text-xs text-text/50">{formatBDT(product.basePrice)}</del>
+      )}
+      {product.hasOwnPrices && (
+        <span className="block text-xs text-text/60">Some sizes differ</span>
+      )}
     </span>
   );
 }

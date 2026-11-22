@@ -6,8 +6,13 @@ import { useGetProductQuery, useGetProductsQuery } from '../../store/api/product
 
 const SEARCH_DELAY_MS = 400;
 
+// Mirrors the backend's utils/pricing.js: a row with its own price uses its own sale price too.
 const unitPrice = (variant, product) =>
-  Number(variant.price ?? product.salePrice ?? product.basePrice);
+  Number(
+    variant.price !== null && variant.price !== undefined
+      ? (variant.salePrice ?? variant.price)
+      : (product.salePrice ?? product.basePrice)
+  );
 
 function VariantRow({ variant, product, added, onAdd }) {
   const [quantity, setQuantity] = useState(1);

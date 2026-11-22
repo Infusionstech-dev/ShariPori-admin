@@ -3,20 +3,33 @@ import { z } from 'zod';
 const money = (message) =>
   z.number({ error: message }).positive(message).max(99999999.99, 'That price is too large');
 
-const variantSchema = z.object({
-  id: z.number().optional(),
-  sizeId: z.number(),
-  colorId: z.number(),
-  sku: z
-    .string()
-    .trim()
-    .max(60, 'SKU is too long')
-    .regex(/^[A-Z0-9-]*$/, 'Use capital letters, numbers and hyphens'),
-  price: money('Price must be above 0').nullable(),
-  stockQty: z.number({ error: 'Enter the stock' }).int().min(0, 'Stock cannot be negative'),
-  lowStockThreshold: z.number({ error: 'Enter a number' }).int().min(0),
-  isActive: z.boolean(),
-});
+const variantSchema = z
+  .object({
+    id: z.number().optional(),
+    sizeId: z.number(),
+    colorId: z.number(),
+    sku: z
+      .string()
+      .trim()
+      .max(60, 'SKU is too long')
+      .regex(/^[A-Z0-9-]*$/, 'Use capital letters, numbers and hyphens'),
+    price: money('Price must be above 0').nullable(),
+    salePrice: money('Sale price must be above 0').nullable(),
+    stockQty: z.number({ error: 'Enter the stock' }).int().min(0, 'Stock cannot be negative'),
+    lowStockThreshold: z.number({ error: 'Enter a number' }).int().min(0),
+    isActive: z.boolean(),
+  })
+  // A row's own sale price needs the row's own price and must be lower than it.
+  .superRefine((row, ctx) => {
+    if (row.salePrice === null) {
+      return;
+    }
+    if (row.price === null) {
+      ctx.addIssue({ code: 'custom', path: ['salePrice'], message: 'Add a price first' });
+    } else if (row.salePrice >= row.price) {
+      ctx.addIssue({ code: 'custom', path: ['salePrice'], message: 'Must be below the price' });
+    }
+  });
 
 // Mirrors the backend's validation/productValidation.js.
 export const productSchema = z
@@ -87,6 +100,7 @@ export const toFormValues = (product) => ({
     colorId: variant.colorId,
     sku: variant.sku,
     price: variant.price,
+    salePrice: variant.salePrice ?? null,
     stockQty: variant.stockQty,
     lowStockThreshold: variant.lowStockThreshold,
     isActive: variant.isActive,

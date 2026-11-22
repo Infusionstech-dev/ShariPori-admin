@@ -37,6 +37,10 @@ export default function PricingTab({ control }) {
         ) : (
           'Enter a base price to see what customers pay.'
         )}
+        <span className="mt-1 block text-text/60">
+          Sizes or colours that cost more or less get their own price under “Sizes, colours and
+          stock”.
+        </span>
       </p>
     </>
   );
